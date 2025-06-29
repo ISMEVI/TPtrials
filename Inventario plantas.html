@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario de Plantas Exóticas</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+  <script>
+    let plantas = [];
+    let editIndex = null;
+
+    function guardarEnLocalStorage() {
+      localStorage.setItem("inventarioPlantas", JSON.stringify(plantas));
+    }
+
+    function cargarDesdeLocalStorage() {
+      const data = localStorage.getItem("inventarioPlantas");
+      if (data) {
+        plantas = JSON.parse(data);
+        renderTabla();
+      }
+    }
+
+    function renderTabla() {
+      const cuerpo = document.getElementById("tabla-cuerpo");
+      cuerpo.innerHTML = "";
+
+      plantas.forEach((p) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="border px-2 py-1">${p.nombre}</td>
+          <td class="border px-2 py-1">${p.proveedor}</td>
+          <td class="border px-2 py-1">${p.costo}</td>
+          <td class="border px-2 py-1">${p.cantidad}</td>
+          <td class="border px-2 py-1">${p.condicion}</td>
+          <td class="border px-2 py-1">${p.precioLista}</td>
+          <td class="border px-2 py-1">${p.precioVenta}</td>
+          <td class="border px-2 py-1">${p.ganancia}</td>
+        `;
+        cuerpo.appendChild(row);
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", cargarDesdeLocalStorage);
+  </script>
+</head>
+<body class="bg-green-50 text-gray-900">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Registro de Plantas Exóticas</h1>
+    <form id="plantForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <input id="nombre" type="text" placeholder="Nombre" required class="p-2 border rounded" />
+      <input id="proveedor" type="text" placeholder="Proveedor" required class="p-2 border rounded" />
+      <input id="costo" type="number" placeholder="Costo" required class="p-2 border rounded" />
+      <input id="cantidad" type="number" placeholder="Cantidad" required class="p-2 border rounded" />
+      <select id="condicion" required class="p-2 border rounded">
+        <option value="">Condición</option>
+        <option value="Sana">Sana</option>
+        <option value="Con plaga">Con plaga</option>
+        <option value="Enferma">Enferma</option>
+        <option value="En tratamiento">En tratamiento</option>
+        <option value="En germinación">En germinación</option>
+        <option value="En crecimiento">En crecimiento</option>
+        <option value="En reproducción">En reproducción</option>
+      </select>
+      <input id="precioLista" type="number" placeholder="Precio de Lista" required class="p-2 border rounded" />
+      <input id="precioVenta" type="number" placeholder="Precio de Venta" required class="p-2 border rounded" />
+      <button type="submit" class="col-span-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Agregar Planta</button>
+    </form>
+
+    <h2 class="text-xl font-semibold mt-10 mb-2">Inventario</h2>
+    <table class="w-full table-auto border-collapse">
+      <thead>
+        <tr class="bg-green-200">
+          <th class="border px-2 py-1">Nombre</th>
+          <th class="border px-2 py-1">Proveedor</th>
+          <th class="border px-2 py-1">Costo</th>
+          <th class="border px-2 py-1">Cantidad</th>
+          <th class="border px-2 py-1">Condición</th>
+          <th class="border px-2 py-1">Precio Lista</th>
+          <th class="border px-2 py-1">Precio Venta</th>
+          <th class="border px-2 py-1">Ganancia</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById("plantForm");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const planta = {
+        nombre: document.getElementById("nombre").value,
+        proveedor: document.getElementById("proveedor").value,
+        costo: parseFloat(document.getElementById("costo").value) || 0,
+        cantidad: parseInt(document.getElementById("cantidad").value) || 0,
+        condicion: document.getElementById("condicion").value,
+        precioLista: parseFloat(document.getElementById("precioLista").value) || 0,
+        precioVenta: parseFloat(document.getElementById("precioVenta").value) || 0,
+        ganancia:
+          (parseFloat(document.getElementById("precioVenta").value) || 0) -
+          (parseFloat(document.getElementById("costo").value) || 0),
+      };
+
+      plantas.push(planta);
+      guardarEnLocalStorage();
+      renderTabla();
+      form.reset();
+      alert("✔ Planta agregada exitosamente");
+    });
+  </script>
+</body>
+</html>
