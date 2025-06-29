@@ -1,117 +1,487 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inventario de Plantas Exóticas</title>
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <!-- Tailwind CSS CDN - Usamos la versión más reciente para compatibilidad y características -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts - Inter para una fuente moderna y legible -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Estilo personalizado para la fuente Inter */
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-green-50 font-sans">
+
+  <!-- Encabezado de la App -->
+  <header class="bg-green-700 text-white py-4 text-center shadow-lg">
+    <h1 class="text-3xl font-bold rounded-lg p-2">Inventario de Plantas Exóticas</h1>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4 md:p-8">
+
+    <!-- Sistema de Tabs -->
+    <div class="mb-6 bg-white p-4 rounded-lg shadow-md">
+      <nav class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mb-4">
+        <button id="tabRegistro" onclick="mostrarSeccion('registro', this)"
+                class="bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+          Registrar Planta
+        </button>
+        <button id="tabInventario" onclick="mostrarSeccion('inventario', this)"
+                class="bg-green-100 text-green-700 border border-green-400 px-6 py-3 rounded-lg shadow-md hover:bg-green-200 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+          Ver Inventario
+        </button>
+      </nav>
+    </div>
+
+    <!-- Mensaje de confirmación/alerta global -->
+    <div id="alerta" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4 shadow-md" role="alert">
+      <strong class="font-bold"></strong>
+      <span class="block sm:inline" id="alertaMensaje"></span>
+    </div>
+
+    <!-- Sección: Formulario de Registro -->
+    <section id="registro" class="block bg-white p-6 rounded-lg shadow-xl border border-green-200">
+      <h2 class="text-2xl text-green-700 font-bold mb-6">Registrar Nueva Planta</h2>
+      <form id="plantForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <input type="text" placeholder="Nombre de la Planta" id="nombre" required
+               class="border border-green-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <input type="text" placeholder="Proveedor" id="proveedor" required
+               class="border border-green-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <input type="number" placeholder="Costo" id="costo" step="0.01" required
+               class="border border-green-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <input type="number" placeholder="Cantidad" id="cantidad" required
+               class="border border-green-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <select id="condicion"
+                class="border border-green-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+          <option value="Sana">Sana</option>
+          <option value="Con plaga">Con plaga</option>
+          <option value="Enferma">Enferma</option>
+          <option value="En tratamiento">En tratamiento</option>
+          <option value="En germinación">En germinación</option>
+          <option value="En crecimiento">En crecimiento</option>
+          <option value="En reproducción">En reproducción</option>
+        </select>
+        <input type="number" placeholder="Precio de Lista" id="precioLista" step="0.01" required
+               class="border border-green-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <input type="number" placeholder="Precio de Venta" id="precioVenta" step="0.01" required
+               class="border border-green-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <button type="submit" id="submitButton"
+                class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg col-span-1 md:col-span-2 transition transform hover:scale-105 shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+          Agregar Planta
+        </button>
+      </form>
+    </section>
+
+    <!-- Sección: Inventario -->
+    <section id="inventario" class="hidden bg-white p-6 rounded-lg shadow-xl border border-green-200">
+      <h2 class="text-2xl text-green-700 font-bold mb-6">Inventario</h2>
+      <div class="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+        <input type="text" id="filter" placeholder="Buscar planta..."
+               class="border border-green-300 p-3 rounded-lg w-full md:w-1/2 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition duration-200">
+        <button onclick="exportarExcel()"
+                class="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg w-full md:w-auto shadow-md transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+          Exportar a Excel
+        </button>
+      </div>
+      <div class="overflow-x-auto rounded-lg shadow-inner border border-green-100">
+        <table class="min-w-full bg-white">
+          <thead class="bg-green-200 text-green-800">
+            <tr>
+              <th class="p-3 text-sm font-semibold text-left">Nombre</th>
+              <th class="p-3 text-sm font-semibold text-left">Proveedor</th>
+              <th class="p-3 text-sm font-semibold text-left">Costo</th>
+              <th class="p-3 text-sm font-semibold text-left">Cantidad</th>
+              <th class="p-3 text-sm font-semibold text-left">Condición</th>
+              <th class="p-3 text-sm font-semibold text-left">Precio Lista</th>
+              <th class="p-3 text-sm font-semibold text-left">Precio Venta</th>
+              <th class="p-3 text-sm font-semibold text-left">Ganancia</th>
+              <th class="p-3 text-sm font-semibold text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaBody">
+            <!-- Las filas de la tabla se insertarán aquí por JavaScript -->
+          </tbody>
+        </table>
+        <p id="noPlantsMessage" class="text-center py-4 text-gray-500 hidden">
+          No hay plantas registradas. ¡Agrega una!
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal de confirmación personalizado -->
+  <div id="confirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-300">
+      <p id="confirmMessage" class="text-lg font-semibold mb-6 text-center text-gray-800"></p>
+      <div class="flex justify-around space-x-4">
+        <button id="confirmBtn"
+                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+          Confirmar
+        </button>
+        <button id="cancelBtn"
+                class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    let plantas = [];
-    let editIndex = null;
+    // =========================================================
+    // Variables Globales
+    // =========================================================
+    let plantas = []; // Array para almacenar los objetos de las plantas
+    let editIndex = -1; // Índice de la planta que se está editando (-1 si no se está editando)
 
-    function guardarEnLocalStorage() {
-      localStorage.setItem("inventarioPlantas", JSON.stringify(plantas));
-    }
+    // =========================================================
+    // Referencias a elementos del DOM (Obtener elementos una sola vez al cargar la página)
+    // =========================================================
+    const plantForm = document.getElementById('plantForm');
+    const nombreInput = document.getElementById('nombre');
+    const proveedorInput = document.getElementById('proveedor');
+    const costoInput = document.getElementById('costo');
+    const cantidadInput = document.getElementById('cantidad');
+    const condicionInput = document.getElementById('condicion');
+    const precioListaInput = document.getElementById('precioLista');
+    const precioVentaInput = document.getElementById('precioVenta');
+    const submitButton = document.getElementById('submitButton');
+    const tablaBody = document.getElementById('tablaBody'); // Cambiado de 'tabla' a 'tablaBody' para tbody
+    const filterInput = document.getElementById('filter');
+    const alertaDiv = document.getElementById('alerta');
+    const alertaMensajeSpan = document.getElementById('alertaMensaje');
+    const tabRegistro = document.getElementById('tabRegistro');
+    const tabInventario = document.getElementById('tabInventario');
+    const noPlantsMessage = document.getElementById('noPlantsMessage');
 
-    function cargarDesdeLocalStorage() {
-      const data = localStorage.getItem("inventarioPlantas");
+    // Referencias para el modal de confirmación
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    let confirmCallback = null; // Función a ejecutar si se confirma el modal
+
+    // =========================================================
+    // Funciones de Persistencia de Datos (localStorage)
+    // =========================================================
+
+    /**
+     * Carga las plantas almacenadas en localStorage.
+     * Si no hay datos, inicializa el array de plantas vacío.
+     */
+    function cargarDeLocalStorage() {
+      const data = localStorage.getItem('plantasInventario'); // Usar una clave específica
       if (data) {
         plantas = JSON.parse(data);
+      } else {
+        plantas = []; // Asegurarse de que sea un array vacío si no hay datos
+      }
+    }
+
+    /**
+     * Guarda el array actual de plantas en localStorage.
+     */
+    function guardarEnLocalStorage() {
+      localStorage.setItem('plantasInventario', JSON.stringify(plantas));
+    }
+
+    // =========================================================
+    // Funciones de UI y Lógica de la Aplicación
+    // =========================================================
+
+    /**
+     * Muestra la sección de la aplicación (Registro o Inventario) y actualiza el estilo de los botones de tab.
+     * @param {string} id - El ID de la sección a mostrar ('registro' o 'inventario').
+     * @param {HTMLElement} clickedButton - El botón de tab que fue clicado.
+     */
+    function mostrarSeccion(id, clickedButton) {
+      document.getElementById('registro').classList.add('hidden');
+      document.getElementById('inventario').classList.add('hidden');
+
+      // Remover clases de activo de todos los botones de tab
+      tabRegistro.classList.remove('bg-green-600', 'text-white');
+      tabRegistro.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-400');
+      tabInventario.classList.remove('bg-green-600', 'text-white');
+      tabInventario.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-400');
+
+      // Añadir clases de activo al botón clicado
+      clickedButton.classList.remove('bg-green-100', 'text-green-700', 'border', 'border-green-400');
+      clickedButton.classList.add('bg-green-600', 'text-white');
+
+      document.getElementById(id).classList.remove('hidden');
+
+      // Si se muestra la sección de inventario, renderizar la tabla
+      if (id === 'inventario') {
         renderTabla();
       }
     }
 
-    function renderTabla() {
-      const cuerpo = document.getElementById("tabla-cuerpo");
-      cuerpo.innerHTML = "";
+    /**
+     * Muestra una alerta en la parte superior de la página.
+     * @param {string} mensaje - El mensaje a mostrar.
+     * @param {string} tipo - 'success', 'error', 'info', 'warning' para colores.
+     */
+    function mostrarAlerta(mensaje, tipo = 'success') {
+      alertaMensajeSpan.textContent = mensaje;
+      alertaDiv.classList.remove('hidden');
+      alertaDiv.classList.remove('bg-green-100', 'border-green-400', 'text-green-700',
+                                 'bg-red-100', 'border-red-400', 'text-red-700',
+                                 'bg-blue-100', 'border-blue-400', 'text-blue-700',
+                                 'bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
 
-      plantas.forEach((p) => {
-        const row = document.createElement("tr");
+      // Asignar clases de Tailwind según el tipo de alerta
+      switch (tipo) {
+        case 'success':
+          alertaDiv.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+          break;
+        case 'error':
+          alertaDiv.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+          break;
+        case 'info':
+          alertaDiv.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
+          break;
+        case 'warning':
+          alertaDiv.classList.add('bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+          break;
+        default:
+          alertaDiv.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+          break;
+      }
+
+      // Ocultar la alerta después de 3 segundos
+      setTimeout(() => {
+        alertaDiv.classList.add('hidden');
+      }, 3000);
+    }
+
+    /**
+     * Renderiza o actualiza la tabla de inventario con los datos actuales de las plantas.
+     * Aplica el filtro si hay texto en el campo de búsqueda.
+     */
+    function renderTabla() {
+      tablaBody.innerHTML = ''; // Limpiar la tabla antes de renderizar
+      const filtro = filterInput.value.toLowerCase().trim(); // Obtener filtro y limpiar espacios
+
+      // Filtrar las plantas según el texto de búsqueda en nombre o proveedor
+      const plantasFiltradas = plantas.filter(p =>
+        p.nombre.toLowerCase().includes(filtro) || p.proveedor.toLowerCase().includes(filtro)
+      );
+
+      if (plantasFiltradas.length === 0) {
+        noPlantsMessage.classList.remove('hidden');
+        return; // No hay plantas para mostrar
+      } else {
+        noPlantsMessage.classList.add('hidden');
+      }
+
+      // Definir colores para las condiciones
+      const condicionColor = {
+        'Sana': 'bg-green-100 text-green-800 border-green-300',
+        'Con plaga': 'bg-red-100 text-red-800 border-red-300',
+        'Enferma': 'bg-pink-100 text-pink-800 border-pink-300',
+        'En tratamiento': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+        'En germinación': 'bg-blue-100 text-blue-800 border-blue-300',
+        'En crecimiento': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+        'En reproducción': 'bg-purple-100 text-purple-800 border-purple-300'
+      };
+
+      plantasFiltradas.forEach((p, i) => {
+        const row = document.createElement('tr');
+        row.className = "border-t border-gray-200 hover:bg-green-50 transition duration-150 ease-in-out";
+
+        const colorClase = condicionColor[p.condicion] || 'bg-gray-100 text-gray-800 border-gray-300'; // Fallback
+
         row.innerHTML = `
-          <td class="border px-2 py-1">${p.nombre}</td>
-          <td class="border px-2 py-1">${p.proveedor}</td>
-          <td class="border px-2 py-1">${p.costo}</td>
-          <td class="border px-2 py-1">${p.cantidad}</td>
-          <td class="border px-2 py-1">${p.condicion}</td>
-          <td class="border px-2 py-1">${p.precioLista}</td>
-          <td class="border px-2 py-1">${p.precioVenta}</td>
-          <td class="border px-2 py-1">${p.ganancia}</td>
+          <td class="p-3 text-center text-sm">${p.nombre}</td>
+          <td class="p-3 text-center text-sm">${p.proveedor}</td>
+          <td class="p-3 text-center text-sm">$${p.costo.toFixed(2)}</td>
+          <td class="p-3 text-center text-sm">${p.cantidad}</td>
+          <td class="p-3 text-center text-sm">
+            <span class="px-2 py-1 rounded-full text-xs font-semibold inline-flex items-center justify-center ${colorClase} border">
+              ${p.condicion}
+            </span>
+          </td>
+          <td class="p-3 text-center text-sm">$${p.precioLista.toFixed(2)}</td>
+          <td class="p-3 text-center text-sm">$${p.precioVenta.toFixed(2)}</td>
+          <td class="p-3 text-center text-sm">$${p.ganancia.toFixed(2)}</td>
+          <td class="p-3 text-center text-sm space-x-1">
+            <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-lg shadow-sm
+                           transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+                    onclick="editar(${plantas.indexOf(p)})">
+              Editar
+            </button>
+            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow-sm
+                           transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                    onclick="eliminar(${plantas.indexOf(p)})">
+              Eliminar
+            </button>
+          </td>
         `;
-        cuerpo.appendChild(row);
+        tablaBody.appendChild(row);
       });
     }
 
-    window.addEventListener("DOMContentLoaded", cargarDesdeLocalStorage);
-  </script>
-</head>
-<body class="bg-green-50 text-gray-900">
-  <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-4">Registro de Plantas Exóticas</h1>
-    <form id="plantForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <input id="nombre" type="text" placeholder="Nombre" required class="p-2 border rounded" />
-      <input id="proveedor" type="text" placeholder="Proveedor" required class="p-2 border rounded" />
-      <input id="costo" type="number" placeholder="Costo" required class="p-2 border rounded" />
-      <input id="cantidad" type="number" placeholder="Cantidad" required class="p-2 border rounded" />
-      <select id="condicion" required class="p-2 border rounded">
-        <option value="">Condición</option>
-        <option value="Sana">Sana</option>
-        <option value="Con plaga">Con plaga</option>
-        <option value="Enferma">Enferma</option>
-        <option value="En tratamiento">En tratamiento</option>
-        <option value="En germinación">En germinación</option>
-        <option value="En crecimiento">En crecimiento</option>
-        <option value="En reproducción">En reproducción</option>
-      </select>
-      <input id="precioLista" type="number" placeholder="Precio de Lista" required class="p-2 border rounded" />
-      <input id="precioVenta" type="number" placeholder="Precio de Venta" required class="p-2 border rounded" />
-      <button type="submit" class="col-span-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Agregar Planta</button>
-    </form>
+    /**
+     * Muestra el modal de confirmación.
+     * @param {string} message - Mensaje a mostrar en el modal.
+     * @param {Function} onConfirmCallback - Función a ejecutar si el usuario confirma.
+     */
+    function showConfirmModal(message, onConfirmCallback) {
+      confirmMessage.textContent = message;
+      confirmCallback = onConfirmCallback;
+      confirmModal.classList.remove('hidden');
+    }
 
-    <h2 class="text-xl font-semibold mt-10 mb-2">Inventario</h2>
-    <table class="w-full table-auto border-collapse">
-      <thead>
-        <tr class="bg-green-200">
-          <th class="border px-2 py-1">Nombre</th>
-          <th class="border px-2 py-1">Proveedor</th>
-          <th class="border px-2 py-1">Costo</th>
-          <th class="border px-2 py-1">Cantidad</th>
-          <th class="border px-2 py-1">Condición</th>
-          <th class="border px-2 py-1">Precio Lista</th>
-          <th class="border px-2 py-1">Precio Venta</th>
-          <th class="border px-2 py-1">Ganancia</th>
-        </tr>
-      </thead>
-      <tbody id="tabla-cuerpo"></tbody>
-    </table>
-  </div>
+    /**
+     * Oculta el modal de confirmación.
+     */
+    function hideConfirmModal() {
+      confirmModal.classList.add('hidden');
+      confirmCallback = null; // Limpiar la callback
+    }
 
-  <script>
-    const form = document.getElementById("plantForm");
+    /**
+     * Función para editar una planta existente.
+     * @param {number} index - El índice de la planta en el array `plantas`.
+     */
+    function editar(index) {
+      const plantaAEditar = plantas[index];
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+      // Rellenar el formulario con los datos de la planta
+      nombreInput.value = plantaAEditar.nombre;
+      proveedorInput.value = plantaAEditar.proveedor;
+      costoInput.value = plantaAEditar.costo;
+      cantidadInput.value = plantaAEditar.cantidad;
+      condicionInput.value = plantaAEditar.condicion;
+      precioListaInput.value = plantaAEditar.precioLista;
+      precioVentaInput.value = plantaAEditar.precioVenta;
 
-      const planta = {
-        nombre: document.getElementById("nombre").value,
-        proveedor: document.getElementById("proveedor").value,
-        costo: parseFloat(document.getElementById("costo").value) || 0,
-        cantidad: parseInt(document.getElementById("cantidad").value) || 0,
-        condicion: document.getElementById("condicion").value,
-        precioLista: parseFloat(document.getElementById("precioLista").value) || 0,
-        precioVenta: parseFloat(document.getElementById("precioVenta").value) || 0,
-        ganancia:
-          (parseFloat(document.getElementById("precioVenta").value) || 0) -
-          (parseFloat(document.getElementById("costo").value) || 0),
-      };
+      // Establecer el modo de edición
+      editIndex = index;
+      submitButton.textContent = 'Guardar Cambios'; // Cambiar texto del botón
+      submitButton.classList.remove('bg-green-600');
+      submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
 
-      plantas.push(planta);
-      guardarEnLocalStorage();
-      renderTabla();
-      form.reset();
-      alert("✔ Planta agregada exitosamente");
+      // Mover a la sección de registro
+      mostrarSeccion('registro', tabRegistro);
+      mostrarAlerta('Editando planta: ' + plantaAEditar.nombre, 'info');
+    }
+
+    /**
+     * Elimina una planta del inventario.
+     * Utiliza el modal de confirmación personalizado.
+     * @param {number} index - El índice de la planta en el array `plantas`.
+     */
+    function eliminar(index) {
+      const plantaAEliminar = plantas[index];
+      showConfirmModal(`¿Estás seguro de eliminar la planta "${plantaAEliminar.nombre}"?`, () => {
+        plantas.splice(index, 1); // Eliminar la planta del array
+        guardarEnLocalStorage(); // Guardar cambios en localStorage
+        renderTabla(); // Volver a renderizar la tabla
+        hideConfirmModal(); // Ocultar el modal
+        mostrarAlerta('Planta eliminada exitosamente.', 'success');
+      });
+    }
+
+    /**
+     * Exporta los datos de la tabla a un archivo Excel (CSV).
+     */
+    function exportarExcel() {
+      if (plantas.length === 0) {
+        mostrarAlerta('No hay datos para exportar.', 'warning');
+        return;
+      }
+
+      let csv = 'Nombre,Proveedor,Costo,Cantidad,Condicion,Precio Lista,Precio Venta,Ganancia\n';
+      plantas.forEach(p => {
+        csv += `${p.nombre},${p.proveedor},${p.costo.toFixed(2)},${p.cantidad},${p.condicion},${p.precioLista.toFixed(2)},${p.precioVenta.toFixed(2)},${p.ganancia.toFixed(2)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      if (link.download !== undefined) { // Feature detection
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'inventario_plantas.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        mostrarAlerta('Datos exportados a Excel (CSV) exitosamente.', 'success');
+      } else {
+        mostrarAlerta('Tu navegador no soporta la descarga directa. Copia los datos manualmente.', 'error');
+      }
+    }
+
+    // =========================================================
+    // Manejadores de Eventos
+    // =========================================================
+
+    // Manejador del envío del formulario
+    plantForm.addEventListener('submit', (e) => {
+      e.preventDefault(); // Prevenir el envío por defecto del formulario
+
+      // Recoger los valores del formulario
+      const nombre = nombreInput.value.trim();
+      const proveedor = proveedorInput.value.trim();
+      const costo = parseFloat(costoInput.value);
+      const cantidad = parseInt(cantidadInput.value);
+      const condicion = condicionInput.value;
+      const precioLista = parseFloat(precioListaInput.value);
+      const precioVenta = parseFloat(precioVentaInput.value);
+      const ganancia = (precioVenta - costo) * cantidad;
+
+      if (editIndex > -1) {
+        // Modo edición: actualizar la planta existente
+        plantas[editIndex] = { nombre, proveedor, costo, cantidad, condicion, precioLista, precioVenta, ganancia };
+        mostrarAlerta('Planta actualizada exitosamente.', 'success');
+        editIndex = -1; // Resetear el índice de edición
+        submitButton.textContent = 'Agregar Planta'; // Restaurar texto del botón
+        submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        submitButton.classList.add('bg-green-600', 'hover:bg-green-700');
+      } else {
+        // Modo agregar: añadir nueva planta
+        const nuevaPlanta = { nombre, proveedor, costo, cantidad, condicion, precioLista, precioVenta, ganancia };
+        plantas.push(nuevaPlanta);
+        mostrarAlerta('Planta agregada exitosamente.', 'success');
+      }
+
+      guardarEnLocalStorage(); // Guardar el array actualizado
+      plantForm.reset(); // Limpiar el formulario
+      renderTabla(); // Actualizar la tabla
+
+      // Opcional: mostrar la sección de inventario después de agregar/editar
+      mostrarSeccion('inventario', tabInventario);
     });
+
+    // Manejador de entrada para el filtro (búsqueda en tiempo real)
+    filterInput.addEventListener('input', renderTabla);
+
+    // Manejadores para los botones del modal de confirmación
+    confirmBtn.addEventListener('click', () => {
+      if (confirmCallback) {
+        confirmCallback();
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      hideConfirmModal();
+      mostrarAlerta('Operación cancelada.', 'info');
+    });
+
+    // =========================================================
+    // Inicialización al cargar la página
+    // =========================================================
+    window.onload = function() {
+      cargarDeLocalStorage(); // Cargar datos al iniciar la página
+      renderTabla(); // Renderizar la tabla con los datos cargados
+      // Asegurarse de que la sección de registro esté activa por defecto y el botón tenga el estilo correcto
+      mostrarSeccion('registro', tabRegistro);
+    };
   </script>
 </body>
 </html>
